@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedCore | Hospital Management System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
+                    colors: {
+                        clinic: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            900: '#1e3a8a',
+                            slate: '#475569',
+                            dark: '#0f172a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --clinic-blue: #2563eb;
+            --clinic-navy: #0f172a;
+            --clinic-teal: #0f766e;
+            --clinic-mint: #ecfdf5;
+            --clinic-border: #dbe7f3;
+            --clinic-shadow: 0 24px 80px rgba(15, 23, 42, 0.12);
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f6f9fc; color: #102033; }
+        .glass-panel { background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(18px); border: 1px solid rgba(255,255,255,0.65); }
+        .hide-view { display: none !important; }
+        .auth-bg { background: linear-gradient(135deg, rgba(15, 23, 42, 0.74), rgba(15, 118, 110, 0.42)), url('/assets/hospital-reception.png') center/cover; background-attachment: fixed; }
+        .form-error { border-color: #dc2626 !important; }
+        .form-success { border-color: #10b981 !important; }
+        .btn-primary { padding: 0.75rem 1.5rem; background: #2563eb; color: #fff; border-radius: 0.5rem; font-weight: 700; transition: background-color 0.2s ease, transform 0.2s ease; }
+        .btn-primary:hover { background: #1d4ed8; transform: translateY(-1px); }
+        .btn-secondary { padding: 0.75rem 1.5rem; background: #e5e7eb; color: #1f2937; border-radius: 0.5rem; font-weight: 700; transition: background-color 0.2s ease; }
+        .btn-secondary:hover { background: #d1d5db; }
+        .alert-error { padding: 0.75rem 1rem; border-radius: 0.5rem; margin-bottom: 1rem; background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        .alert-success { padding: 0.75rem 1rem; border-radius: 0.5rem; margin-bottom: 1rem; background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+        .modal { position: fixed; inset: 0; z-index: 50; align-items: center; justify-content: center; background: rgba(0,0,0,0.5); display: none; }
+        .modal.show { display: flex !important; }
+        .site-nav { position: sticky; top: 0; z-index: 30; background: rgba(255,255,255,0.92); backdrop-filter: blur(18px); border-bottom: 1px solid rgba(219,231,243,0.9); }
+        .hero-shell { min-height: 78vh; display: grid; align-items: center; background: linear-gradient(115deg, rgba(8, 16, 32, 0.82), rgba(15, 118, 110, 0.46)), url('/assets/hospital-reception.png') center/cover; color: white; position: relative; overflow: hidden; }
+        .hero-shell::after { content: ""; position: absolute; inset: auto 0 0; height: 36%; background: linear-gradient(0deg, #f6f9fc 0%, rgba(246,249,252,0)); pointer-events: none; }
+        .hero-content { position: relative; z-index: 1; max-width: 760px; }
+        .eyebrow { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.45rem 0.75rem; border-radius: 999px; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.24); font-size: 0.78rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+        .hero-card { background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.22); border-radius: 0.75rem; padding: 1rem; backdrop-filter: blur(16px); }
+        .metric-tile, .feature-tile, .dash-card { background: white; border: 1px solid var(--clinic-border); border-radius: 0.75rem; box-shadow: 0 12px 38px rgba(15, 23, 42, 0.07); }
+        .feature-tile { padding: 1.5rem; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .feature-tile:hover { transform: translateY(-3px); box-shadow: var(--clinic-shadow); }
+        .icon-bubble { width: 2.75rem; height: 2.75rem; display: grid; place-items: center; border-radius: 0.7rem; background: #e0f2fe; color: var(--clinic-blue); }
+        .equipment-strip { background: linear-gradient(135deg, #0f172a, #115e59); color: white; }
+        .equipment-card { border: 1px solid rgba(255,255,255,0.18); border-radius: 0.75rem; padding: 1rem; background: rgba(255,255,255,0.1); }
+        .dashboard-shell { display: grid; grid-template-columns: 260px minmax(0, 1fr); min-height: 100vh; background: #f6f9fc; }
+        .dashboard-sidebar { background: #0f172a; color: #dbeafe; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; }
+        .dashboard-main { padding: 1.25rem; overflow: hidden; }
+        .dashboard-hero { background: linear-gradient(120deg, rgba(15,23,42,0.92), rgba(37,99,235,0.72)), url('/assets/hospital-reception.png') center/cover; border-radius: 0.9rem; color: white; padding: 1.5rem; box-shadow: var(--clinic-shadow); }
+        .tab-btn { width: 100%; display: flex; align-items: center; gap: 0.75rem; padding: 0.8rem 0.9rem; border-radius: 0.7rem; color: #cbd5e1; font-weight: 700; transition: background 0.2s ease, color 0.2s ease; }
+        .tab-btn:hover, .tab-btn.active { background: rgba(37, 99, 235, 0.18); color: white; }
+        .content-panel { background: white; border: 1px solid var(--clinic-border); border-radius: 0.9rem; padding: 1.25rem; box-shadow: 0 14px 42px rgba(15,23,42,0.07); }
+        .form-control { width: 100%; padding: 0.85rem 1rem; border: 1px solid #cbd5e1; border-radius: 0.7rem; outline: none; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+        .form-control:focus { border-color: var(--clinic-blue); box-shadow: 0 0 0 4px rgba(37,99,235,0.12); }
+        @media (max-width: 900px) {
+            .dashboard-shell { grid-template-columns: 1fr; }
+            .dashboard-sidebar { position: static; gap: 1rem; }
+            .dashboard-main { padding: 1rem; }
+            .hero-shell { min-height: auto; padding: 5rem 0 6rem; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <!-- LANDING PAGE -->
+    <div id="landing-page" class="min-h-screen">
+        <nav class="site-nav">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-heartbeat text-clinic-600 text-2xl"></i>
+                    <span class="text-2xl font-bold text-clinic-900">MedCore</span>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="showLoginForm()" class="px-4 py-2 text-clinic-900 font-bold hover:text-clinic-600">Login</button>
+                    <button onclick="showRegisterForm()" class="px-4 py-2 bg-clinic-600 text-white rounded-lg font-bold hover:bg-clinic-700 shadow-lg shadow-blue-200">Register</button>
+                </div>
+            </div>
+        </nav>
+
+        <section class="hero-shell">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+                <div class="hero-content">
+                    <span class="eyebrow"><i class="fas fa-circle-check"></i> Patient-first digital care</span>
+                    <h1 class="text-4xl sm:text-6xl font-bold leading-tight mt-5 mb-5">MedCore Hospital Management System</h1>
+                    <p class="text-lg sm:text-xl text-blue-50 max-w-2xl mb-8">A polished portal for patient registration, secure login, appointment booking, doctor management, and clinical administration.</p>
+                    <div class="flex flex-col sm:flex-row gap-3 mb-8">
+                        <button onclick="showRegisterForm()" class="px-7 py-3 bg-white text-clinic-900 rounded-lg font-bold hover:bg-blue-50">Create Patient Account</button>
+                        <button onclick="showLoginForm()" class="px-7 py-3 bg-clinic-600 text-white rounded-lg font-bold hover:bg-clinic-700">Sign In</button>
+                    </div>
+                    <div class="grid sm:grid-cols-3 gap-3">
+                        <div class="hero-card">
+                            <p class="text-2xl font-bold">24/7</p>
+                            <p class="text-sm text-blue-50">Digital access</p>
+                        </div>
+                        <div class="hero-card">
+                            <p class="text-2xl font-bold">Secure</p>
+                            <p class="text-sm text-blue-50">Protected records</p>
+                        </div>
+                        <div class="hero-card">
+                            <p class="text-2xl font-bold">Fast</p>
+                            <p class="text-sm text-blue-50">Appointment flow</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-10 pb-12">
+            <div class="grid md:grid-cols-3 gap-5">
+                <div class="feature-tile">
+                    <div class="icon-bubble mb-4"><i class="fas fa-calendar-check"></i></div>
+                    <h3 class="text-xl font-bold mb-2 text-clinic-900">Smart Appointment Booking</h3>
+                    <p class="text-gray-600">Patients can register, log in, select a doctor, and request care without manual paperwork.</p>
+                </div>
+                <div class="feature-tile">
+                    <div class="icon-bubble mb-4"><i class="fas fa-user-doctor"></i></div>
+                    <h3 class="text-xl font-bold mb-2 text-clinic-900">Doctor Registry</h3>
+                    <p class="text-gray-600">Administrators can manage doctors, departments, patient records, and appointment status.</p>
+                </div>
+                <div class="feature-tile">
+                    <div class="icon-bubble mb-4"><i class="fas fa-shield-heart"></i></div>
+                    <h3 class="text-xl font-bold mb-2 text-clinic-900">Secure Access</h3>
+                    <p class="text-gray-600">Separate patient and admin authentication keeps clinical workflows organized.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="equipment-strip">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <div class="grid lg:grid-cols-[1.1fr_1fr] gap-8 items-center">
+                    <div>
+                        <p class="eyebrow mb-4"><i class="fas fa-stethoscope"></i> Clinical operations</p>
+                        <h2 class="text-3xl font-bold mb-3">Built around real hospital workflows</h2>
+                        <p class="text-blue-50">The interface highlights the tools a hospital team expects: appointments, doctors, patient lists, care status, and quick access to daily work.</p>
+                    </div>
+                    <div class="grid sm:grid-cols-2 gap-3">
+                        <div class="equipment-card"><i class="fas fa-heart-pulse text-2xl mb-3"></i><h3 class="font-bold">Vitals Monitoring</h3><p class="text-sm text-blue-50">Clinical-ready information cards.</p></div>
+                        <div class="equipment-card"><i class="fas fa-syringe text-2xl mb-3"></i><h3 class="font-bold">Care Requests</h3><p class="text-sm text-blue-50">Fast booking and triage context.</p></div>
+                        <div class="equipment-card"><i class="fas fa-bed-pulse text-2xl mb-3"></i><h3 class="font-bold">Patient Flow</h3><p class="text-sm text-blue-50">Track pending and confirmed visits.</p></div>
+                        <div class="equipment-card"><i class="fas fa-microscope text-2xl mb-3"></i><h3 class="font-bold">Admin Control</h3><p class="text-sm text-blue-50">Manage staff and appointment queues.</p></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- REGISTRATION FORM -->
+    <div id="register-page" class="hide-view min-h-screen auth-bg flex items-center justify-center py-12">
+        <div class="w-full max-w-md">
+            <div class="glass-panel rounded-2xl shadow-xl p-8">
+                <button onclick="backToLanding()" class="mb-6 text-gray-600 hover:text-gray-900">
+                    <i class="fas fa-arrow-left mr-2"></i>Back
+                </button>
+                <h2 class="text-3xl font-bold text-clinic-900 mb-2">Create Account</h2>
+                <p class="text-gray-600 mb-6">Join MedCore and manage your health</p>
+
+                <div id="register-error" class="hide-view alert-error"></div>
+                <div id="register-success" class="hide-view alert-success"></div>
+
+                <form id="register-form" onsubmit="handleRegister(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Full Name *</label>
+                        <input type="text" id="reg-fullname" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-600" placeholder="John Doe">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
+                        <input type="email" id="reg-email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-600" placeholder="john@example.com">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Phone</label>
+                        <input type="tel" id="reg-phone" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-600" placeholder="+1234567890">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Date of Birth</label>
+                        <input type="date" id="reg-dob" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-600">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Password *</label>
+                        <input type="password" id="reg-password" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-600" placeholder="Min 6 characters">
+                        <small class="text-gray-600">Password must be at least 6 characters</small>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Confirm Password *</label>
+                        <input type="password" id="reg-confirm-password" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-600" placeholder="Confirm password">
+                    </div>
+
+                    <button type="submit" class="btn-primary w-full">Create Account</button>
+                </form>
+
+                <p class="text-center text-gray-600 mt-4">
+                    Already have an account?
+                    <button onclick="showLoginForm()" class="text-clinic-600 font-semibold hover:underline">Sign In</button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- USER LOGIN FORM -->
+    <div id="login-page" class="hide-view min-h-screen auth-bg flex items-center justify-center py-12">
+        <div class="w-full max-w-md">
+            <div class="glass-panel rounded-2xl shadow-xl p-8">
+                <button onclick="backToLanding()" class="mb-6 text-gray-600 hover:text-gray-900">
+                    <i class="fas fa-arrow-left mr-2"></i>Back
+                </button>
+                <h2 class="text-3xl font-bold text-clinic-900 mb-2">User Login</h2>
+                <p class="text-gray-600 mb-6">Sign in to your account</p>
+
+                <div id="login-error" class="hide-view alert-error"></div>
+
+                <form id="login-form" onsubmit="handleUserLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
+                        <input type="email" id="login-email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-600" placeholder="your@email.com">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Password *</label>
+                        <input type="password" id="login-password" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-600" placeholder="Your password">
+                    </div>
+
+                    <button type="submit" class="btn-primary w-full">Sign In</button>
+                </form>
+
+                <p class="text-center text-gray-600 mt-4">
+                    Don't have an account?
+                    <button onclick="showRegisterForm()" class="text-clinic-600 font-semibold hover:underline">Create one</button>
+                </p>
+
+                <hr class="my-6">
+
+                <button onclick="showAdminLogin()" class="w-full px-4 py-3 bg-clinic-900 text-white rounded-lg font-semibold hover:bg-clinic-700">
+                    <i class="fas fa-shield-alt mr-2"></i>Admin Login
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN LOGIN FORM -->
+    <div id="admin-login-page" class="hide-view min-h-screen auth-bg flex items-center justify-center py-12">
+        <div class="w-full max-w-md">
+            <div class="glass-panel rounded-2xl shadow-xl p-8">
+                <button onclick="backToLanding()" class="mb-6 text-gray-600 hover:text-gray-900">
+                    <i class="fas fa-arrow-left mr-2"></i>Back
+                </button>
+                <h2 class="text-3xl font-bold text-clinic-900 mb-2"><i class="fas fa-shield-alt text-clinic-600 mr-2"></i>Admin Login</h2>
+                <p class="text-gray-600 mb-6">Administrative access for Ajok Hanin Ajang only</p>
+
+                <div id="admin-login-error" class="hide-view alert-error"></div>
+
+                <form id="admin-login-form" onsubmit="handleAdminLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Admin Username *</label>
+                        <input type="text" id="admin-username" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-600" placeholder="Ajok Hanin Ajang">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Password *</label>
+                        <input type="password" id="admin-password" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-600" placeholder="Admin password">
+                    </div>
+
+                    <button type="submit" class="w-full px-6 py-3 bg-clinic-600 text-white rounded-lg font-semibold hover:bg-clinic-700">Access Admin Panel</button>
+                </form>
+
+                <p class="text-center text-gray-600 mt-4">
+                    <button onclick="showLoginForm()" class="text-clinic-600 font-semibold hover:underline">User Login</button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- USER DASHBOARD -->
+    <div id="user-dashboard" class="hide-view dashboard-shell">
+        <aside class="dashboard-sidebar">
+            <div>
+                <div class="flex items-center gap-3 mb-8">
+                    <div class="w-11 h-11 rounded-xl bg-blue-500 grid place-items-center"><i class="fas fa-heartbeat text-white"></i></div>
+                    <div>
+                        <p class="font-bold text-xl text-white">MedCore</p>
+                        <p class="text-xs text-blue-200">Patient Portal</p>
+                    </div>
+                </div>
+                <nav class="space-y-2">
+                    <button onclick="switchTab('appointments-tab')" class="tab-btn active">
+                        <i class="fas fa-calendar-check"></i> My Appointments
+                    </button>
+                    <button onclick="switchTab('book-appointment-tab')" class="tab-btn">
+                        <i class="fas fa-plus-circle"></i> Book Appointment
+                    </button>
+                    <button onclick="switchTab('profile-tab')" class="tab-btn">
+                        <i class="fas fa-user-circle"></i> Profile
+                    </button>
+                </nav>
+            </div>
+            <div class="border-t border-slate-700 pt-4">
+                <p id="user-fullname" class="font-bold text-white mb-3"></p>
+                <button onclick="logout()" class="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-bold">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                </button>
+            </div>
+        </aside>
+
+        <main class="dashboard-main">
+            <section class="dashboard-hero mb-6">
+                <div class="grid lg:grid-cols-[1.4fr_1fr] gap-6 items-center">
+                    <div>
+                        <p class="text-blue-100 font-bold mb-2">Patient dashboard</p>
+                        <h1 class="text-3xl sm:text-4xl font-bold mb-3">Welcome, <span id="patient-welcome-name">there</span>. How can we help you today?</h1>
+                        <p class="text-blue-50">Book appointments, view your visit history, and keep your care details in one calm, secure place.</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="hero-card"><i class="fas fa-user-doctor mb-2"></i><p class="font-bold">Find a doctor</p></div>
+                        <div class="hero-card"><i class="fas fa-clock mb-2"></i><p class="font-bold">Choose a time</p></div>
+                        <div class="hero-card"><i class="fas fa-notes-medical mb-2"></i><p class="font-bold">Share symptoms</p></div>
+                        <div class="hero-card"><i class="fas fa-circle-check mb-2"></i><p class="font-bold">Track status</p></div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="grid md:grid-cols-3 gap-4 mb-6">
+                <div class="metric-tile p-5"><p class="text-sm text-gray-500">Care status</p><p class="text-2xl font-bold text-clinic-900">Active</p></div>
+                <div class="metric-tile p-5"><p class="text-sm text-gray-500">Doctors available</p><p id="patient-doctor-count" class="text-2xl font-bold text-clinic-900">--</p></div>
+                <div class="metric-tile p-5"><p class="text-sm text-gray-500">Your appointments</p><p id="patient-appointment-count" class="text-2xl font-bold text-clinic-900">--</p></div>
+            </div>
+
+            <!-- My Appointments Tab -->
+            <div id="appointments-tab" class="tab-content content-panel">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                    <div>
+                        <h2 class="text-2xl font-bold text-clinic-900">My Appointments</h2>
+                        <p class="text-gray-500">Track your booked consultations and their current status.</p>
+                    </div>
+                    <button onclick="switchTab('book-appointment-tab')" class="btn-primary">Book New Visit</button>
+                </div>
+                <div id="appointments-list" class="space-y-4">
+                    <!-- Appointments will be loaded here -->
+                </div>
+                <div id="no-appointments" class="text-center py-12">
+                    <i class="fas fa-calendar-times text-5xl text-gray-300 mb-4"></i>
+                    <p class="text-gray-600">No appointments yet. Book one to get started!</p>
+                </div>
+            </div>
+
+            <!-- Book Appointment Tab -->
+            <div id="book-appointment-tab" class="tab-content hide-view content-panel">
+                <div class="grid lg:grid-cols-[1fr_0.75fr] gap-6">
+                <div>
+                    <h2 class="text-2xl font-bold mb-2 text-clinic-900">Book an Appointment</h2>
+                    <p class="text-gray-500 mb-5">Tell us who you want to see and when you are available.</p>
+                    <div id="book-appointment-error" class="hide-view alert-error"></div>
+                    <div id="book-appointment-success" class="hide-view alert-success"></div>
+
+                    <form id="book-appointment-form" onsubmit="handleBookAppointment(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Select Doctor *</label>
+                            <select id="doctor-select" required class="form-control">
+                                <option value="">-- Choose a doctor --</option>
+                            </select>
+                        </div>
+
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Appointment Date *</label>
+                                <input type="date" id="appointment-date" required class="form-control">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Appointment Time *</label>
+                                <input type="time" id="appointment-time" required class="form-control">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Reason for Visit</label>
+                            <textarea id="appointment-reason" rows="4" class="form-control" placeholder="Describe your health concern..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn-primary w-full">Book Appointment</button>
+                    </form>
+                </div>
+                <div class="rounded-xl overflow-hidden border border-blue-100 bg-blue-50">
+                    <img src="/assets/hospital-reception.png" alt="Modern hospital reception" class="w-full h-48 object-cover">
+                    <div class="p-5">
+                        <h3 class="font-bold text-clinic-900 mb-2">Prepared care starts here</h3>
+                        <p class="text-sm text-gray-600">Your appointment reason helps the hospital team prepare before you arrive.</p>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <!-- Profile Tab -->
+            <div id="profile-tab" class="tab-content hide-view content-panel">
+                <h2 class="text-2xl font-bold mb-4 text-clinic-900">My Profile</h2>
+                <div class="max-w-2xl">
+                    <div id="profile-info" class="space-y-4">
+                        <!-- Profile info will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ADMIN DASHBOARD -->
+    <div id="admin-dashboard" class="hide-view dashboard-shell">
+        <aside class="dashboard-sidebar">
+            <div>
+                <div class="flex items-center gap-3 mb-8">
+                    <div class="w-11 h-11 rounded-xl bg-teal-500 grid place-items-center"><i class="fas fa-shield-alt text-white"></i></div>
+                    <div>
+                        <p class="font-bold text-xl text-white">MedCore</p>
+                        <p class="text-xs text-blue-200">Admin Command</p>
+                    </div>
+                </div>
+                <nav class="space-y-2">
+                    <button onclick="switchTab('admin-appointments-tab')" class="tab-btn active">
+                        <i class="fas fa-calendar-days"></i> All Appointments
+                    </button>
+                    <button onclick="switchTab('manage-doctors-tab')" class="tab-btn">
+                        <i class="fas fa-user-doctor"></i> Manage Doctors
+                    </button>
+                    <button onclick="switchTab('manage-users-tab')" class="tab-btn">
+                        <i class="fas fa-users"></i> Patients
+                    </button>
+                    <button onclick="switchTab('admin-profile-tab')" class="tab-btn">
+                        <i class="fas fa-gear"></i> Profile
+                    </button>
+                </nav>
+            </div>
+            <div class="border-t border-slate-700 pt-4">
+                <p id="admin-fullname" class="font-bold text-white mb-3"></p>
+                <button onclick="logout()" class="w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-bold">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                </button>
+            </div>
+        </aside>
+
+        <main class="dashboard-main">
+            <section class="dashboard-hero mb-6">
+                <div class="grid lg:grid-cols-[1.2fr_1fr] gap-6 items-center">
+                    <div>
+                        <p class="text-blue-100 font-bold mb-2">Admin dashboard</p>
+                        <h1 class="text-3xl sm:text-4xl font-bold mb-3">Welcome, Ajok. Your hospital overview is ready.</h1>
+                        <p class="text-blue-50">Monitor appointments, doctors, and registered patients from one professional workspace.</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="hero-card"><i class="fas fa-bed-pulse mb-2"></i><p class="font-bold">Patient flow</p></div>
+                        <div class="hero-card"><i class="fas fa-stethoscope mb-2"></i><p class="font-bold">Clinical team</p></div>
+                        <div class="hero-card"><i class="fas fa-chart-line mb-2"></i><p class="font-bold">Live queue</p></div>
+                        <div class="hero-card"><i class="fas fa-lock mb-2"></i><p class="font-bold">Secure access</p></div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="grid md:grid-cols-3 gap-4 mb-6">
+                <div class="metric-tile p-5"><p class="text-sm text-gray-500">Appointments</p><p id="admin-appointment-count" class="text-2xl font-bold text-clinic-900">--</p></div>
+                <div class="metric-tile p-5"><p class="text-sm text-gray-500">Doctors</p><p id="admin-doctor-count" class="text-2xl font-bold text-clinic-900">--</p></div>
+                <div class="metric-tile p-5"><p class="text-sm text-gray-500">Patients</p><p id="admin-user-count" class="text-2xl font-bold text-clinic-900">--</p></div>
+            </div>
+
+            <!-- All Appointments Tab -->
+            <div id="admin-appointments-tab" class="tab-content content-panel">
+                <h2 class="text-2xl font-bold mb-1 text-clinic-900">All Appointments</h2>
+                <p class="text-gray-500 mb-5">Review patient requests and update clinical status.</p>
+                <div id="admin-appointments-list" class="space-y-4">
+                    <!-- Appointments will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Manage Doctors Tab -->
+            <div id="manage-doctors-tab" class="tab-content hide-view content-panel">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-clinic-900">Manage Doctors</h2>
+                        <p class="text-gray-500">Keep the hospital team list current.</p>
+                    </div>
+                    <button onclick="showAddDoctorForm()" class="px-4 py-2 bg-clinic-600 text-white rounded-lg hover:bg-clinic-700">
+                        <i class="fas fa-plus mr-2"></i>Add Doctor
+                    </button>
+                </div>
+
+                <!-- Add Doctor Form Modal -->
+                <div id="add-doctor-modal" class="modal">
+                    <div class="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
+                        <button onclick="closeAddDoctorForm()" class="float-right text-gray-600 hover:text-gray-900 text-2xl">×</button>
+                        <h3 class="text-2xl font-bold mb-4">Add New Doctor</h3>
+
+                        <div id="add-doctor-error" class="hide-view alert-error"></div>
+
+                        <form id="add-doctor-form" onsubmit="handleAddDoctor(event)" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Full Name *</label>
+                                <input type="text" id="doctor-fullname" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-600" placeholder="Dr. John Smith">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Specialization *</label>
+                                <input type="text" id="doctor-specialization" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-600" placeholder="e.g., Cardiology">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Phone</label>
+                                <input type="tel" id="doctor-phone" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-600" placeholder="+1234567890">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                                <input type="email" id="doctor-email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-clinic-600" placeholder="doctor@hospital.com">
+                            </div>
+
+                            <button type="submit" class="btn-primary w-full">Add Doctor</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="doctors-list" class="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    <!-- Doctors will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Manage Users Tab -->
+            <div id="manage-users-tab" class="tab-content hide-view content-panel">
+                <h2 class="text-2xl font-bold mb-1 text-clinic-900">Registered Patients</h2>
+                <p class="text-gray-500 mb-5">People who have created patient accounts.</p>
+                <div id="users-list" class="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    <!-- Users will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Admin Profile Tab -->
+            <div id="admin-profile-tab" class="tab-content hide-view content-panel">
+                <h2 class="text-2xl font-bold mb-4 text-clinic-900">Admin Profile</h2>
+                <div class="max-w-2xl">
+                    <div id="admin-profile-info" class="space-y-4">
+                        <!-- Admin profile info will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const API_URL = (
+            window.location.protocol === 'file:' ||
+            (window.location.hostname === 'localhost' && window.location.port !== '5000') ||
+            (window.location.hostname === '127.0.0.1' && window.location.port !== '5000')
+        ) ? 'http://localhost:5000' : window.location.origin;
+        let currentUser = null;
+        let userToken = null;
+
+        async function apiRequest(path, options = {}) {
+            const response = await fetch(`${API_URL}${path}`, options);
+            const text = await response.text();
+            let data = {};
+
+            if (text) {
+                try {
+                    data = JSON.parse(text);
+                } catch (error) {
+                    throw new Error(`Server returned an invalid response from ${path}. Make sure the backend is running on http://localhost:5000`);
+                }
+            }
+
+            if (!response.ok) {
+                throw new Error(data.message || `Request failed with status ${response.status}`);
+            }
+
+            return data;
+        }
+
+        function escapeHTML(value) {
+            return String(value ?? '').replace(/[&<>"']/g, char => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            }[char]));
+        }
+
+        // PAGE NAVIGATION
+        function showPage(pageName) {
+            document.querySelectorAll('[id$="-page"], [id$="-dashboard"]').forEach(el => {
+                el.classList.add('hide-view');
+            });
+            document.getElementById(pageName).classList.remove('hide-view');
+        }
+
+        function showLandingPage() { showPage('landing-page'); }
+        function showRegisterForm() { showPage('register-page'); }
+        function showLoginForm() { showPage('login-page'); }
+        function showAdminLogin() { showPage('admin-login-page'); }
+        function backToLanding() { showPage('landing-page'); }
+
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        function setInputState(inputId, isValid) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            input.classList.toggle('form-error', !isValid);
+            input.classList.toggle('form-success', isValid);
+        }
+
+        function validateRequired(fields, errorElementId) {
+            for (const field of fields) {
+                const input = document.getElementById(field.id);
+                const value = input.value.trim();
+                const valid = field.validate ? field.validate(value) : Boolean(value);
+                setInputState(field.id, valid);
+                if (!valid) {
+                    showError(errorElementId, field.message);
+                    input.focus();
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // REGISTRATION
+        function handleRegister(e) {
+            e.preventDefault();
+            const fullname = document.getElementById('reg-fullname').value.trim();
+            const email = document.getElementById('reg-email').value.trim().toLowerCase();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const dob = document.getElementById('reg-dob').value;
+            const password = document.getElementById('reg-password').value;
+            const confirmPassword = document.getElementById('reg-confirm-password').value;
+
+            if (!validateRequired([
+                { id: 'reg-fullname', message: 'Full name is required' },
+                { id: 'reg-email', validate: isValidEmail, message: 'Enter a valid email address' },
+                { id: 'reg-password', validate: value => value.length >= 6, message: 'Password must be at least 6 characters' },
+                { id: 'reg-confirm-password', message: 'Please confirm your password' }
+            ], 'register-error')) return;
+
+            if (password !== confirmPassword) {
+                setInputState('reg-confirm-password', false);
+                showError('register-error', 'Passwords do not match');
+                return;
+            }
+
+            apiRequest('/patients/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    fullname, email, password, phone,
+                    date_of_birth: dob || null
+                })
+            })
+            .then(data => {
+                if (data.success) {
+                    userToken = data.data.token;
+                    currentUser = data.data.user;
+                    localStorage.setItem('userToken', userToken);
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    loadUserDashboard();
+                } else {
+                    showError('register-error', data.message);
+                }
+            })
+            .catch(err => showError('register-error', err.message));
+        }
+
+        // USER LOGIN
+        function handleUserLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim().toLowerCase();
+            const password = document.getElementById('login-password').value;
+
+            if (!validateRequired([
+                { id: 'login-email', validate: isValidEmail, message: 'Enter your email address' },
+                { id: 'login-password', message: 'Enter your password' }
+            ], 'login-error')) return;
+
+            apiRequest('/patients/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            })
+            .then(data => {
+                if (data.success) {
+                    userToken = data.data.token;
+                    currentUser = data.data.user;
+                    localStorage.setItem('userToken', userToken);
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    loadUserDashboard();
+                } else {
+                    showError('login-error', data.message);
+                }
+            })
+            .catch(err => showError('login-error', err.message));
+        }
+
+        // ADMIN LOGIN
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('admin-username').value.trim();
+            const password = document.getElementById('admin-password').value;
+
+            if (!validateRequired([
+                { id: 'admin-username', message: 'Enter the admin username' },
+                { id: 'admin-password', message: 'Enter the admin password' }
+            ], 'admin-login-error')) return;
+
+            apiRequest('/admin/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            })
+            .then(data => {
+                if (data.success) {
+                    userToken = data.data.token;
+                    currentUser = data.data.user;
+                    localStorage.setItem('adminToken', userToken);
+                    localStorage.setItem('currentAdmin', JSON.stringify(currentUser));
+                    loadAdminDashboard();
+                } else {
+                    showError('admin-login-error', data.message);
+                }
+            })
+            .catch(err => showError('admin-login-error', err.message));
+        }
+
+        // USER DASHBOARD
+        function loadUserDashboard() {
+            showPage('user-dashboard');
+            document.getElementById('user-fullname').textContent = currentUser.fullname;
+            document.getElementById('patient-welcome-name').textContent = currentUser.fullname?.split(' ')[0] || 'there';
+            switchTab('appointments-tab');
+            loadUserAppointments();
+            loadDoctorsList();
+            loadUserProfile();
+        }
+
+        function loadUserAppointments() {
+            apiRequest('/appointments/my-appointments', {
+                headers: { 'Authorization': `Bearer ${userToken}` }
+            })
+            .then(data => {
+                const list = document.getElementById('appointments-list');
+                document.getElementById('patient-appointment-count').textContent = data.count ?? data.data.length;
+                if (data.success && data.data.length > 0) {
+                    list.innerHTML = data.data.map(apt => `
+                        <div class="dash-card p-4 border-l-4 border-clinic-600">
+                            <div class="flex flex-col sm:flex-row sm:justify-between gap-4">
+                                <div>
+                                    <p class="text-xs font-bold uppercase text-clinic-600 tracking-wide">Consultation</p>
+                                    <h3 class="font-bold text-lg text-clinic-900">${escapeHTML(apt.doctor_name)}</h3>
+                                    <p class="text-sm text-gray-600">${escapeHTML(apt.specialization)}</p>
+                                    <div class="mt-3 flex flex-wrap gap-2 text-sm text-gray-600">
+                                        <span class="px-3 py-1 rounded-full bg-blue-50"><i class="fas fa-calendar mr-1 text-clinic-600"></i>${new Date(apt.appointment_date).toLocaleDateString()}</span>
+                                        <span class="px-3 py-1 rounded-full bg-emerald-50"><i class="fas fa-clock mr-1 text-teal-700"></i>${apt.appointment_time}</span>
+                                    </div>
+                                    ${apt.reason ? `<p class="mt-3 text-sm text-gray-700"><strong>Reason:</strong> ${escapeHTML(apt.reason)}</p>` : ''}
+                                </div>
+                                <div class="flex sm:flex-col items-start sm:items-end gap-3">
+                                    <span class="px-3 py-1 rounded-full text-sm font-bold ${getStatusColor(apt.status)}">${escapeHTML(apt.status)}</span>
+                                    <button onclick="cancelAppointment(${apt.id})" class="px-3 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 text-sm font-bold">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                    document.getElementById('no-appointments').style.display = 'none';
+                } else {
+                    list.innerHTML = '';
+                    document.getElementById('no-appointments').style.display = 'block';
+                }
+            })
+            .catch(err => showError('book-appointment-error', err.message));
+        }
+
+        function loadDoctorsList() {
+            apiRequest('/doctors', {
+                headers: { 'Authorization': `Bearer ${userToken}` }
+            })
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('patient-doctor-count').textContent = data.count;
+                    const select = document.getElementById('doctor-select');
+                    select.innerHTML = '<option value="">-- Choose a doctor --</option>' +
+                        data.data.map(doc => `<option value="${doc.id}">${escapeHTML(doc.fullname)} - ${escapeHTML(doc.specialization)}</option>`).join('');
+                }
+            });
+        }
+
+        function loadUserProfile() {
+            apiRequest('/patients/profile', {
+                headers: { 'Authorization': `Bearer ${userToken}` }
+            })
+            .then(data => {
+                if (data.success) {
+                    const info = document.getElementById('profile-info');
+                    info.innerHTML = `
+                        <div class="dash-card p-4">
+                            <label class="text-gray-700 font-semibold">Full Name:</label>
+                            <p class="text-gray-900">${escapeHTML(data.data.fullname)}</p>
+                        </div>
+                        <div class="dash-card p-4">
+                            <label class="text-gray-700 font-semibold">Email:</label>
+                            <p class="text-gray-900">${escapeHTML(data.data.email)}</p>
+                        </div>
+                        ${data.data.phone ? `<div class="dash-card p-4">
+                            <label class="text-gray-700 font-semibold">Phone:</label>
+                            <p class="text-gray-900">${escapeHTML(data.data.phone)}</p>
+                        </div>` : ''}
+                        ${data.data.date_of_birth ? `<div class="dash-card p-4">
+                            <label class="text-gray-700 font-semibold">Date of Birth:</label>
+                            <p class="text-gray-900">${escapeHTML(data.data.date_of_birth)}</p>
+                        </div>` : ''}
+                        <div class="dash-card p-4">
+                            <label class="text-gray-700 font-semibold">Member Since:</label>
+                            <p class="text-gray-900">${new Date(data.data.created_at).toLocaleDateString()}</p>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        function handleBookAppointment(e) {
+            e.preventDefault();
+            const doctor_id = document.getElementById('doctor-select').value;
+            const appointment_date = document.getElementById('appointment-date').value;
+            const appointment_time = document.getElementById('appointment-time').value;
+            const reason = document.getElementById('appointment-reason').value.trim();
+
+            const selectedDateTime = new Date(`${appointment_date}T${appointment_time}`);
+            if (!validateRequired([
+                { id: 'doctor-select', message: 'Please choose a doctor' },
+                { id: 'appointment-date', message: 'Please choose an appointment date' },
+                { id: 'appointment-time', message: 'Please choose an appointment time' }
+            ], 'book-appointment-error')) return;
+
+            if (Number.isNaN(selectedDateTime.getTime()) || selectedDateTime <= new Date()) {
+                setInputState('appointment-date', false);
+                setInputState('appointment-time', false);
+                showError('book-appointment-error', 'Appointment date and time must be in the future');
+                return;
+            }
+
+            apiRequest('/appointments/book', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${userToken}`
+                },
+                body: JSON.stringify({
+                    doctor_id: parseInt(doctor_id),
+                    appointment_date,
+                    appointment_time,
+                    reason: reason || null
+                })
+            })
+            .then(data => {
+                if (data.success) {
+                    showSuccess('book-appointment-success', 'Appointment booked successfully!');
+                    document.getElementById('book-appointment-form').reset();
+                    setTimeout(() => {
+                        switchTab('appointments-tab');
+                        loadUserAppointments();
+                    }, 1500);
+                } else {
+                    showError('book-appointment-error', data.message);
+                }
+            })
+            .catch(err => showError('book-appointment-error', err.message));
+        }
+
+        // ADMIN DASHBOARD
+        function loadAdminDashboard() {
+            showPage('admin-dashboard');
+            document.getElementById('admin-fullname').textContent = currentUser.fullname;
+            switchTab('admin-appointments-tab');
+            loadAdminAppointments();
+            loadDoctors();
+            loadUsers();
+            loadAdminProfile();
+        }
+
+        function loadAdminAppointments() {
+            apiRequest('/appointments', {
+                headers: { 'Authorization': `Bearer ${userToken}` }
+            })
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('admin-appointment-count').textContent = data.count;
+                    const list = document.getElementById('admin-appointments-list');
+                    list.innerHTML = data.data.map(apt => `
+                        <div class="dash-card p-4 border-l-4 border-clinic-600">
+                            <div class="flex flex-col lg:flex-row lg:justify-between gap-4">
+                                <div class="flex-1">
+                                    <p class="text-xs font-bold uppercase text-clinic-600 tracking-wide">Patient request</p>
+                                    <h3 class="font-bold text-lg text-clinic-900">${escapeHTML(apt.patient_name)}</h3>
+                                    <p class="text-sm text-gray-600">Dr. ${escapeHTML(apt.doctor_name)} (${escapeHTML(apt.specialization)})</p>
+                                    <p class="mt-2 text-sm text-gray-700"><i class="fas fa-calendar text-clinic-600 mr-1"></i>${new Date(apt.appointment_date).toLocaleDateString()} at ${apt.appointment_time}</p>
+                                    <div class="mt-3">
+                                        <label class="block text-xs font-bold text-gray-500 mb-1">Status</label>
+                                        <select onchange="updateAppointmentStatus(${apt.id}, this.value)" class="form-control max-w-xs">
+                                            <option value="pending" ${apt.status === 'pending' ? 'selected' : ''}>Pending</option>
+                                            <option value="confirmed" ${apt.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
+                                            <option value="completed" ${apt.status === 'completed' ? 'selected' : ''}>Completed</option>
+                                            <option value="cancelled" ${apt.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="lg:text-right text-sm text-gray-600">
+                                    <p><i class="fas fa-phone text-teal-700 mr-1"></i>${escapeHTML(apt.patient_phone || 'N/A')}</p>
+                                    <p><i class="fas fa-envelope text-clinic-600 mr-1"></i>${escapeHTML(apt.patient_email || 'N/A')}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            });
+        }
+
+        function updateAppointmentStatus(id, status) {
+            fetch(`${API_URL}/appointments/${id}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${userToken}`
+                },
+                body: JSON.stringify({ status })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Appointment status updated!');
+                    loadAdminAppointments();
+                }
+            });
+        }
+
+        function loadDoctors() {
+            apiRequest('/doctors', {
+                headers: { 'Authorization': `Bearer ${userToken}` }
+            })
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('admin-doctor-count').textContent = data.count;
+                    const list = document.getElementById('doctors-list');
+                    list.innerHTML = data.data.map(doc => `
+                        <div class="dash-card p-5">
+                            <div class="icon-bubble mb-4"><i class="fas fa-user-doctor"></i></div>
+                            <h3 class="font-bold text-lg text-clinic-900">${escapeHTML(doc.fullname)}</h3>
+                            <p class="text-sm font-semibold text-teal-700">${escapeHTML(doc.specialization)}</p>
+                            <p class="text-sm mt-3 text-gray-600"><strong>Phone:</strong> ${escapeHTML(doc.phone || 'N/A')}</p>
+                            <p class="text-sm text-gray-600"><strong>Email:</strong> ${escapeHTML(doc.email || 'N/A')}</p>
+                            <button onclick="deleteDoctor(${doc.id})" class="mt-4 px-3 py-2 bg-red-50 text-red-700 rounded-lg text-sm hover:bg-red-100 font-bold">Delete</button>
+                        </div>
+                    `).join('');
+                }
+            });
+        }
+
+        function deleteDoctor(id) {
+            if (!confirm('Are you sure you want to delete this doctor?')) return;
+            fetch(`${API_URL}/doctors/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${userToken}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Doctor deleted!');
+                    loadDoctors();
+                }
+            });
+        }
+
+        function showAddDoctorForm() {
+            document.getElementById('add-doctor-modal').classList.add('show');
+        }
+
+        function closeAddDoctorForm() {
+            document.getElementById('add-doctor-modal').classList.remove('show');
+        }
+
+        function handleAddDoctor(e) {
+            e.preventDefault();
+            const fullname = document.getElementById('doctor-fullname').value.trim();
+            const specialization = document.getElementById('doctor-specialization').value.trim();
+            const phone = document.getElementById('doctor-phone').value.trim();
+            const email = document.getElementById('doctor-email').value.trim().toLowerCase();
+
+            if (!validateRequired([
+                { id: 'doctor-fullname', message: 'Doctor name is required' },
+                { id: 'doctor-specialization', message: 'Specialization is required' }
+            ], 'add-doctor-error')) return;
+
+            if (email && !isValidEmail(email)) {
+                setInputState('doctor-email', false);
+                showError('add-doctor-error', 'Enter a valid doctor email address');
+                return;
+            }
+
+            fetch(`${API_URL}/doctors`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${userToken}`
+                },
+                body: JSON.stringify({ fullname, specialization, phone, email })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Doctor added successfully!');
+                    closeAddDoctorForm();
+                    document.getElementById('add-doctor-form').reset();
+                    loadDoctors();
+                } else {
+                    showError('add-doctor-error', data.message);
+                }
+            })
+            .catch(err => showError('add-doctor-error', 'Failed to add doctor: ' + err.message));
+        }
+
+        function loadUsers() {
+            apiRequest('/admin/users', {
+                headers: { 'Authorization': `Bearer ${userToken}` }
+            })
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('admin-user-count').textContent = data.count;
+                    const list = document.getElementById('users-list');
+                    list.innerHTML = data.data.map(user => `
+                        <div class="dash-card p-5">
+                            <div class="icon-bubble mb-4"><i class="fas fa-user"></i></div>
+                            <h3 class="font-bold text-lg text-clinic-900">${escapeHTML(user.fullname)}</h3>
+                            <p class="text-sm"><strong>Email:</strong> ${escapeHTML(user.email)}</p>
+                            <p class="text-sm"><strong>Phone:</strong> ${escapeHTML(user.phone || 'N/A')}</p>
+                            <p class="text-sm"><strong>Joined:</strong> ${new Date(user.created_at).toLocaleDateString()}</p>
+                        </div>
+                    `).join('');
+                }
+            });
+        }
+
+        function loadAdminProfile() {
+            apiRequest('/admin/profile', {
+                headers: { 'Authorization': `Bearer ${userToken}` }
+            })
+            .then(data => {
+                if (data.success) {
+                    const info = document.getElementById('admin-profile-info');
+                    info.innerHTML = `
+                        <div class="dash-card p-4">
+                            <label class="text-gray-700 font-semibold">Full Name:</label>
+                            <p class="text-gray-900">${escapeHTML(data.data.fullname)}</p>
+                        </div>
+                        <div class="dash-card p-4">
+                            <label class="text-gray-700 font-semibold">Email:</label>
+                            <p class="text-gray-900">${escapeHTML(data.data.email)}</p>
+                        </div>
+                        <div class="dash-card p-4">
+                            <label class="text-gray-700 font-semibold">Phone:</label>
+                            <p class="text-gray-900">${escapeHTML(data.data.phone || 'Not set')}</p>
+                        </div>
+                        <div class="dash-card p-4">
+                            <label class="text-gray-700 font-semibold">Role:</label>
+                            <p class="text-gray-900">${escapeHTML(data.data.role.toUpperCase())}</p>
+                        </div>
+                        <div class="dash-card p-4">
+                            <label class="text-gray-700 font-semibold">Member Since:</label>
+                            <p class="text-gray-900">${new Date(data.data.created_at).toLocaleDateString()}</p>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        // UTILITIES
+        function switchTab(tabName) {
+            document.querySelectorAll('[id$="-tab"]').forEach(el => el.classList.add('hide-view'));
+            document.getElementById(tabName).classList.remove('hide-view');
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            const activeButton = document.querySelector(`.tab-btn[onclick*="${tabName}"]`);
+            if (activeButton) {
+                activeButton.classList.add('active');
+            }
+        }
+
+        function cancelAppointment(id) {
+            if (!confirm('Are you sure you want to cancel this appointment?')) return;
+            fetch(`${API_URL}/appointments/${id}/cancel`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${userToken}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Appointment cancelled!');
+                    loadUserAppointments();
+                }
+            });
+        }
+
+        function showError(elementId, message) {
+            const el = document.getElementById(elementId);
+            el.textContent = message;
+            el.classList.remove('hide-view');
+            setTimeout(() => el.classList.add('hide-view'), 5000);
+        }
+
+        function showSuccess(elementId, message) {
+            const el = document.getElementById(elementId);
+            el.textContent = message;
+            el.classList.remove('hide-view');
+            setTimeout(() => el.classList.add('hide-view'), 5000);
+        }
+
+        function getStatusColor(status) {
+            const colors = {
+                'pending': 'bg-yellow-100 text-yellow-800',
+                'confirmed': 'bg-blue-100 text-blue-800',
+                'completed': 'bg-green-100 text-green-800',
+                'cancelled': 'bg-red-100 text-red-800'
+            };
+            return colors[status] || 'bg-gray-100 text-gray-800';
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('userToken');
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('adminToken');
+                localStorage.removeItem('currentAdmin');
+                userToken = null;
+                currentUser = null;
+                showPage('landing-page');
+            }
+        }
+
+        function wireLiveValidation() {
+            const today = new Date().toISOString().split('T')[0];
+            const appointmentDate = document.getElementById('appointment-date');
+            const dob = document.getElementById('reg-dob');
+            if (appointmentDate) appointmentDate.min = today;
+            if (dob) dob.max = today;
+
+            const fields = [
+                'reg-fullname', 'reg-email', 'reg-phone', 'reg-dob', 'reg-password', 'reg-confirm-password',
+                'login-email', 'login-password', 'admin-username', 'admin-password',
+                'doctor-select', 'appointment-date', 'appointment-time', 'appointment-reason',
+                'doctor-fullname', 'doctor-specialization', 'doctor-phone', 'doctor-email'
+            ];
+
+            fields.forEach(id => {
+                const input = document.getElementById(id);
+                if (!input) return;
+                input.addEventListener('input', () => {
+                    const value = input.value.trim();
+                    if (!value && input.hasAttribute('required')) {
+                        setInputState(id, false);
+                        return;
+                    }
+                    if ((id.includes('email') || id === 'reg-email' || id === 'login-email') && value) {
+                        setInputState(id, isValidEmail(value));
+                        return;
+                    }
+                    if (id === 'reg-password' && value) {
+                        setInputState(id, value.length >= 6);
+                        return;
+                    }
+                    if (id === 'reg-confirm-password' && value) {
+                        setInputState(id, value === document.getElementById('reg-password').value);
+                        return;
+                    }
+                    if (value) setInputState(id, true);
+                });
+                input.addEventListener('change', () => input.dispatchEvent(new Event('input')));
+            });
+        }
+
+        // Check if already logged in
+        window.addEventListener('load', () => {
+            wireLiveValidation();
+
+            const savedUserToken = localStorage.getItem('userToken');
+            const savedAdminToken = localStorage.getItem('adminToken');
+            const savedUser = localStorage.getItem('currentUser');
+            const savedAdmin = localStorage.getItem('currentAdmin');
+
+            if (savedAdminToken && savedAdmin) {
+                userToken = savedAdminToken;
+                currentUser = JSON.parse(savedAdmin);
+                loadAdminDashboard();
+            } else if (savedUserToken && savedUser) {
+                userToken = savedUserToken;
+                currentUser = JSON.parse(savedUser);
+                loadUserDashboard();
+            } else {
+                showPage('landing-page');
+            }
+        });
+    </script>
+</body>
+</html>
