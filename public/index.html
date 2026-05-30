@@ -696,23 +696,28 @@
         let userToken = null;
 
         async function apiRequest(path, options = {}) {
-            const response = await fetch(`${API_URL}${path}`, options);
-            const text = await response.text();
-            let data = {};
+            try {
+                const response = await fetch(`${API_URL}${path}`, options);
+                const text = await response.text();
+                let data = {};
 
-            if (text) {
-                try {
-                    data = JSON.parse(text);
-                } catch (error) {
-                    throw new Error(`Server returned an invalid response from ${path}. Make sure the backend is running on http://localhost:5000`);
+                if (text) {
+                    try {
+                        data = JSON.parse(text);
+                    } catch (error) {
+                        throw new Error(`Server returned an invalid response from ${path}. Make sure the backend is running on http://localhost:5000`);
+                    }
                 }
-            }
 
-            if (!response.ok) {
-                throw new Error(data.message || `Request failed with status ${response.status}`);
-            }
+                if (!response.ok) {
+                    throw new Error(data.message || `Request failed with status ${response.status}`);
+                }
 
-            return data;
+                return data;
+            } catch (error) {
+                console.error(`API Request Error [${path}]:`, error.message);
+                throw error;
+            }
         }
 
         function escapeHTML(value) {
@@ -837,7 +842,10 @@
                     showError('login-error', data.message);
                 }
             })
-            .catch(err => showError('login-error', err.message));
+            .catch(err => {
+                console.error("User login error:", err.message);
+                showError('login-error', err.message || 'Failed to connect to server. Please check your connection and try again.');
+            });
         }
 
         // ADMIN LOGIN
@@ -860,6 +868,8 @@
         if (data.success) {
             userToken = data.data.token;
             currentUser = data.data.user;
+            localStorage.setItem('adminToken', userToken);
+            localStorage.setItem('currentAdmin', JSON.stringify(currentUser));
             loadAdminDashboard();
         } else {
             showError('admin-login-error', data.message);
