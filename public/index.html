@@ -41,9 +41,41 @@
         }
         * { box-sizing: border-box; }
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f6f9fc; color: #102033; }
-        .glass-panel { background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(18px); border: 1px solid rgba(255,255,255,0.65); }
+        .glass-panel {
+    background: rgba(255, 255, 255, 0.92);
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    border-radius: 24px;
+
+    border: 1px solid rgba(255,255,255,0.2);
+
+    box-shadow:
+        0 10px 40px rgba(0,0,0,0.15);
+
+    padding: 2rem;
+}
         .hide-view { display: none !important; }
-        .auth-bg { background: linear-gradient(135deg, rgba(15, 23, 42, 0.74), rgba(15, 118, 110, 0.42)), url('/assets/hospital-reception.png') center/cover; background-attachment: fixed; }
+        .auth-bg {
+    position: relative;
+    min-height: 100vh;
+
+    background-image:
+        linear-gradient(
+            rgba(15, 23, 42, 0.75),
+            rgba(8, 47, 73, 0.80)
+        ),
+        url('./assets/hospital-reception.png');
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
         .form-error { border-color: #dc2626 !important; }
         .form-success { border-color: #10b981 !important; }
         .btn-primary { padding: 0.75rem 1.5rem; background: #2563eb; color: #fff; border-radius: 0.5rem; font-weight: 700; transition: background-color 0.2s ease, transform 0.2s ease; }
@@ -81,6 +113,89 @@
             .dashboard-main { padding: 1rem; }
             .hero-shell { min-height: auto; padding: 5rem 0 6rem; }
         }
+
+
+        .hero-bg {
+    position: relative;
+    background-image:
+        linear-gradient(
+            rgba(8, 47, 73, 0.75),
+            rgba(15, 23, 42, 0.75)
+        ),
+        url('./assets/hospital-reception.png'); /* your image path */
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    min-height: 100vh;
+
+    display: flex;
+    align-items: center;
+}
+
+.hero-bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    backdrop-filter: blur(2px);
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+.auth-bg {
+    position: relative;
+    min-height: 100vh;
+
+    background-image:
+        linear-gradient(
+            rgba(15, 23, 42, 0.75),
+            rgba(8, 47, 73, 0.80)
+        ),
+        url('./images/hospital-bg.jpg');
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+
+.auth-bg {
+    background-image:
+        linear-gradient(
+            rgba(15,23,42,.75),
+            rgba(8,47,73,.80)
+        ),
+        url('./assets/hospital-reception.png');
+
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.glass-panel {
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(10px);
+    border-radius: 24px;
+}
+
+
+
+
+
+
+/* Improves appearance on larger screens */
+@media (min-width: 768px) {
+    .hero-bg {
+        background-position: center center;
+    }
+}
     </style>
 </head>
 <body class="bg-gray-50">
@@ -100,7 +215,7 @@
             </div>
         </nav>
 
-        <section class="hero-shell">
+        <section class="hero-shell hero-bg">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
                 <div class="hero-content">
                     <span class="eyebrow"><i class="fas fa-circle-check"></i> Patient-first digital care</span>
@@ -174,6 +289,13 @@
                 <button onclick="backToLanding()" class="mb-6 text-gray-600 hover:text-gray-900">
                     <i class="fas fa-arrow-left mr-2"></i>Back
                 </button>
+
+                <div class="text-center mb-6">
+    <i class="fas fa-heartbeat text-5xl text-clinic-600 mb-3"></i>
+    <h1 class="text-2xl font-bold text-clinic-900">
+        MedCore
+    </h1>
+</div>
                 <h2 class="text-3xl font-bold text-clinic-900 mb-2">Create Account</h2>
                 <p class="text-gray-600 mb-6">Join MedCore and manage your health</p>
 
@@ -719,34 +841,37 @@
         }
 
         // ADMIN LOGIN
-        function handleAdminLogin(e) {
-            e.preventDefault();
-            const username = document.getElementById('admin-username').value.trim();
-            const password = document.getElementById('admin-password').value;
+      function handleAdminLogin(e) {
+    e.preventDefault();
 
-            if (!validateRequired([
-                { id: 'admin-username', message: 'Enter the admin username' },
-                { id: 'admin-password', message: 'Enter the admin password' }
-            ], 'admin-login-error')) return;
+    const username = document.getElementById('admin-username').value.trim();
+    const password = document.getElementById('admin-password').value;
 
-            apiRequest('/admin/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            })
-            .then(data => {
-                if (data.success) {
-                    userToken = data.data.token;
-                    currentUser = data.data.user;
-                    localStorage.setItem('adminToken', userToken);
-                    localStorage.setItem('currentAdmin', JSON.stringify(currentUser));
-                    loadAdminDashboard();
-                } else {
-                    showError('admin-login-error', data.message);
-                }
-            })
-            .catch(err => showError('admin-login-error', err.message));
+    console.log("Username:", username);
+
+    apiRequest('/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+    })
+    .then(data => {
+        console.log("SERVER RESPONSE:", data);
+
+        if (data.success) {
+            userToken = data.data.token;
+            currentUser = data.data.user;
+            loadAdminDashboard();
+        } else {
+            showError('admin-login-error', data.message);
         }
+    })
+    .catch(err => {
+        console.error("LOGIN ERROR:", err);
+        showError('admin-login-error', err.message);
+    });
+}
+
+        
 
         // USER DASHBOARD
         function loadUserDashboard() {

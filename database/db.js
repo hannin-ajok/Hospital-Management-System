@@ -1,13 +1,27 @@
 const { Pool } = require('pg');
+require('dotenv').config();
+
+let poolConfig;
+
+// Check if DATABASE_URL is provided (for Supabase)
+if (process.env.DATABASE_URL) {
+  poolConfig = process.env.DATABASE_URL;
+} else {
+  // Use individual DB variables
+  poolConfig = {
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+    port: parseInt(process.env.DB_PORT || '5432', 10)
+  };
+}
 
 const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: parseInt(process.env.DB_PORT || '5432', 10),
+  connectionString: typeof poolConfig === 'string' ? poolConfig : undefined,
+  ...(typeof poolConfig === 'object' ? poolConfig : {}),
   ssl: {
-    rejectUnauthorized: false // Required for Supabase connections
+    rejectUnauthorized: false
   }
 });
 

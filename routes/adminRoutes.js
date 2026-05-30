@@ -6,6 +6,9 @@ const { generateToken, authMiddleware, adminMiddleware } = require("../auth");
 
 // Admin Login
 router.post("/login", async (req, res) => {
+    console.log("ADMIN LOGIN REQUEST RECEIVED");
+    console.log(req.body);
+
     const { username, password } = req.body;
 
     try {
@@ -56,11 +59,11 @@ router.post("/login", async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Admin login error:", error.message);
+        console.error("Admin login error:", error);
         res.status(500).json({
             message: "Login failed",
             success: false,
-            error: error.message
+            error: error.message || error.toString()
         });
     }
 });
